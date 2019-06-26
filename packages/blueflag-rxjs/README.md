@@ -2,6 +2,10 @@
 
 Rxjs algorithms.
 
+- [zipDiff](#zipDiff)
+- [operators/complete](#operators/complete)
+- [dynamodb/queryAll](#dynamodb/queryAll)
+
 ## zipDiff
 
 Takes two observables and finds which items exist in one or both, according to a key.
@@ -69,4 +73,19 @@ obs.pipe(
         console.log("I'm done mate");
     })
 );
+```
+
+## dynamodb/queryAll
+
+Turns AWS `DocClient.query()` into an observable which will by default keep requesting whenever there is more data to be paginated.
+
+
+```js
+import {queryAll} from 'blueflag-rxjs/dynamodb';
+
+queryAll(
+    docClient: DocClient,
+    params: Params,
+    feedbackObservable: ?Observable
+): Observable
 ```
