@@ -13,13 +13,16 @@ work out when two items are matching.
 
 A second `keyBy` function can be added if you need a different keyBy function for the second observable.
 
+Items are emitted as early as they can be, so the internal buffer can try and be as small as possible. Pairs of matching items are emitted as soon as they match, and non-matching items are emitted as soon as it's known that it's impossible that there will be a match.
+(e.g. if the buffer contains items from A, and input observable B completes, then it's known there will never be matches for any buffered A's, so they are all emitted)
+
 ```js
 zipDiff(
     obsA: Observable,
     obsB: Observable,
     keyBy: (item) => any,
     keyByB?: (item) => any
-)
+): Observable
 ```
 
 ```js
@@ -27,7 +30,7 @@ zipDiff(obsA, obsB, itemA => itemA.id)
 
 // obsA adds {id: "1", name: "One"}
 // obsA adds {id: "2", name: "Two"}
-// obsB adds {id: "2", name: "Three"}
+// obsB adds {id: "3", name: "Three"}
 // obsB adds {id: "2", name: "Too"}
 
 // output:
@@ -42,7 +45,7 @@ zipDiff(obsA, obsB, itemA => itemA.id)
 }
 
 {
-    b: {id: "2", name: "Two"}
+    b: {id: "3", name: "Three"}
 }
 
 ```
