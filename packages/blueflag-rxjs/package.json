@@ -15,7 +15,7 @@
     "lib",
     "operators"
   ],
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
     "prepublish": "yarn build",
     "build": "rm -rf lib && NODE_ENV=production yarn babel src --out-dir lib --ignore '**/__tests__/*.js'",
