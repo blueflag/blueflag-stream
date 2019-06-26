@@ -1,0 +1,39 @@
+{
+  "name": "blueflag-rxjs",
+  "version": "0.0.0",
+  "description": "Rxjs algorithms",
+  "license": "MIT",
+  "author": "Blueflag",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blueflag/blueflag-stream.git"
+  },
+  "bugs": {
+    "url": "https://github.com/blueflag/blueflag-stream/issues"
+  },
+  "main": "index.js",
+  "scripts": {
+    "prepublish": "yarn build",
+    "build": "rm -rf lib && NODE_ENV=production yarn babel src --out-dir lib --ignore '**/__tests__/*.js'",
+    "build-all": "yarn build",
+    "flow": "blueflag-test flow",
+    "flow-coverage": "blueflag-test flow-coverage",
+    "lint": "blueflag-test lint",
+    "test": "yarn build && yarn jest --maxWorkers=1",
+    "test-all": "yarn build && yarn jest --maxWorkers=1 && yarn flow && yarn lint && yarn flow-coverage",
+    "watch": "yarn run build -w"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.1.5"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.1.2",
+    "@babel/core": "^7.1.2",
+    "babel-preset-blueflag": "^1.0.0",
+    "blueflag-test": "^0.22.0",
+    "rxjs": "^6.5.2"
+  },
+  "peerDependencies": {
+    "rxjs": "^6.5.2"
+  }
+}
