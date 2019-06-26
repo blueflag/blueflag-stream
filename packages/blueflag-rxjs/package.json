@@ -11,6 +11,9 @@
   "bugs": {
     "url": "https://github.com/blueflag/blueflag-stream/issues"
   },
+  "files": [
+    "lib"
+  ],
   "main": "index.js",
   "scripts": {
     "prepublish": "yarn build",
