@@ -3,6 +3,7 @@
   "scripts": {
     "bootstrap": "yarn lerna bootstrap",
     "prep": "yarn && yarn lerna bootstrap",
+    "bump": "yarn lerna publish",
     "build": "yarn lerna run build",
     "reinstall": "rm -rf node_modules && rm -rf packages/*/node_modules && yarn prep",
     "test-all": "yarn lerna run test-all",
