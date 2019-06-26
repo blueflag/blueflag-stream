@@ -17,6 +17,8 @@ Items are emitted as early as they can be, so the internal buffer can try and be
 (e.g. if the buffer contains items from A, and input observable B completes, then it's known there will never be matches for any buffered A's, so they are all emitted)
 
 ```js
+import {zipDiff} from 'blueflag-rxjs';
+
 zipDiff(
     obsA: Observable,
     obsB: Observable,
@@ -55,6 +57,8 @@ zipDiff(obsA, obsB, itemA => itemA.id)
 Emits a single item upon completion of the observable.
 
 ```js
+import {complete} from 'blueflag-rxjs/operators';
+
 complete()
 ```
 
