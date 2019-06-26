@@ -12,7 +12,8 @@
     "url": "https://github.com/blueflag/blueflag-stream/issues"
   },
   "files": [
-    "lib"
+    "lib",
+    "operators"
   ],
   "main": "index.js",
   "scripts": {
