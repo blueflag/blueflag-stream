@@ -1,36 +1,32 @@
 // @flow
-import {Subject} from 'rxjs';
+import {TestScheduler} from 'rxjs/testing';
 import complete from '../complete';
 import {COMPLETE} from '../complete';
 
 describe('complete', () => {
 
+    const testScheduler = new TestScheduler((actual, expected) => {
+        expect(actual).toEqual(expected);
+    });
+
     it('complete should emit one item upon complete', () => {
-        let output = jest.fn();
 
-        const subject = new Subject();
+        // This test will actually run *synchronously*
+        testScheduler.run(helpers => {
+            const {cold, expectObservable, expectSubscriptions} = helpers;
 
-        subject
-            .pipe(complete())
-            .subscribe(output);
+            let values = {d: COMPLETE};
 
-        expect(output).toHaveBeenCalledTimes(0);
+            const e1 =  cold('-a--b--c---|', values);
+            const subs =     '^----------!';
+            const expected = '-----------(d|)';
 
-        subject.complete();
-        expect(output).toHaveBeenCalledTimes(1);
-        expect(output.mock.calls[0][0]).toBe(COMPLETE);
+            expectObservable(
+                e1.pipe(complete())
+            ).toBe(expected, values);
+
+            expectSubscriptions(e1.subscriptions).toBe(subs);
+        });
     });
 
-    it('complete should not affect parallel observables', () => {
-        let output = jest.fn();
-
-        const subject = new Subject();
-
-        subject.subscribe(output);
-        subject.pipe(complete());
-        subject.next(123);
-
-        expect(output).toHaveBeenCalledTimes(1);
-        expect(output.mock.calls[0][0]).toBe(123);
-    });
 });
