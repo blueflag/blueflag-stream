@@ -4,6 +4,7 @@ Rxjs algorithms.
 
 - [zipDiff](#zipDiff)
 - [operators/complete](#operators/complete)
+- [dynamodb/batchWrite](#dynamodb/batchWrite)
 - [dynamodb/queryAll](#dynamodb/queryAll)
 
 ## zipDiff
@@ -74,6 +75,36 @@ obs.pipe(
     })
 );
 ```
+
+## dynamodb/batchWrite
+
+Turns AWS `DocClient.batchWrite()` into a pipeable observable which accepts an observable of params and calls `batchWrite()`, batching items to 25 at a time and retrying dynamo's `UnprocessedItems` automatically.
+
+
+```js
+import {batchWrite} from 'blueflag-rxjs/dynamodb';
+
+batchWrite({
+    docClient: DocClient,
+    tableName: string
+}): Observable => Observable
+```
+
+```js
+from([{
+    {
+        PutRequest: {
+            Item: {
+                foo: 200
+            }
+        }
+    }
+    ...
+}])
+    .pipe(batchWrite)
+    .toPromise();
+```
+
 
 ## dynamodb/queryAll
 
