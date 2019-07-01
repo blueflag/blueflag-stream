@@ -1,178 +1,281 @@
 // @flow
-import {Subject} from 'rxjs';
+import {TestScheduler} from 'rxjs/testing';
 import zipDiff from '../zipDiff';
 
 describe('zipDiff', () => {
 
     it('zipDiff should emit items when they match', () => {
-        let output = jest.fn();
 
-        const subjectA = new Subject();
-        const subjectB = new Subject();
-        zipDiff(subjectA, subjectB, item => item.id).subscribe(output);
-
-        expect(output).toHaveBeenCalledTimes(0);
-
-        // add an item to A with an id that only A will have
-        subjectA.next({
-            id: '100',
-            name: 'Angry'
+        const testScheduler = new TestScheduler((actual, expected) => {
+            expect(actual).toEqual(expected);
         });
 
-        // expect no output yet...
-        expect(output).toHaveBeenCalledTimes(0);
+        testScheduler.run(helpers => {
+            const {cold, expectObservable, expectSubscriptions} = helpers;
 
-        // add an item to B
-        subjectB.next({
-            id: '200',
-            name: 'Bangry'
-        });
+            let values = {
+                x: {
+                    a: 'x',
+                    b: 'x'
+                },
+                y: {
+                    a: 'y',
+                    b: 'y'
+                }
+            };
 
-        // still expect no output output yet...
-        expect(output).toHaveBeenCalledTimes(0);
+            const a =   cold('-x-----y---|');
+            const b =   cold('---y-x-----|');
+            const subs =     '^----------!';
+            const expected = '-----x-y---|';
 
-        // add an item to B with an id that matches a prevous one
-        subjectA.next({
-            id: '200',
-            name: 'Other bangry'
-        });
+            expectObservable(
+                zipDiff(a, b, ii => ii)
+            ).toBe(expected, values);
 
-        // id of 'b' should match previous and emit an item
-        expect(output).toHaveBeenCalledTimes(1);
-        expect(output.mock.calls[0][0]).toEqual({
-            a: {
-                id: '200',
-                name: 'Other bangry'
-            },
-            b: {
-                id: '200',
-                name: 'Bangry'
-            }
+            expectSubscriptions(a.subscriptions).toBe(subs);
+            expectSubscriptions(b.subscriptions).toBe(subs);
         });
     });
 
     it('zipDiff should emit items that dont have matches once an input observable is finished', () => {
-        let output = jest.fn();
 
-        const subjectA = new Subject();
-        const subjectB = new Subject();
-
-        zipDiff(subjectA, subjectB, item => item.id).subscribe(output);
-
-        subjectA.next({
-            id: '100',
-            name: 'Cool'
+        const testScheduler = new TestScheduler((actual, expected) => {
+            expect(actual).toEqual(expected);
         });
 
-        subjectA.next({
-            id: '200',
-            name: 'Fool'
-        });
+        testScheduler.run(helpers => {
+            const {cold, expectObservable, expectSubscriptions} = helpers;
 
-        subjectB.next({
-            id: '300',
-            name: 'Wool'
-        });
+            let values = {
+                x: {
+                    a: 'x',
+                    b: 'x'
+                },
+                y: {
+                    a: 'y'
+                },
+                z: {
+                    b: 'z'
+                }
+            };
 
-        subjectB.next({
-            id: '400',
-            name: 'Tool'
-        });
+            const a =   cold('-----x-y---|');
+            const b =   cold('-x-z-------|');
+            const subs =     '^----------!';
+            const expected = '-----x-----(yz|)';
 
-        // expect no output output yet...
-        expect(output).toHaveBeenCalledTimes(0);
+            expectObservable(
+                zipDiff(a, b, ii => ii)
+            ).toBe(expected, values);
 
-        subjectA.complete();
-
-        // expect all B items to emit now A as closed,
-        // as they'll never receive a match
-        expect(output).toHaveBeenCalledTimes(2);
-        expect(output.mock.calls[0][0]).toEqual({
-            b: {
-                id: '300',
-                name: 'Wool'
-            }
-        });
-        expect(output.mock.calls[1][0]).toEqual({
-            b: {
-                id: '400',
-                name: 'Tool'
-            }
-        });
-
-        subjectB.complete();
-
-        // expect remaining items to be emitted
-        expect(output).toHaveBeenCalledTimes(4);
-        expect(output.mock.calls[2][0]).toEqual({
-            a: {
-                id: '100',
-                name: 'Cool'
-            }
-        });
-        expect(output.mock.calls[3][0]).toEqual({
-            a: {
-                id: '200',
-                name: 'Fool'
-            }
+            expectSubscriptions(a.subscriptions).toBe(subs);
+            expectSubscriptions(b.subscriptions).toBe(subs);
         });
     });
 
-    it('zipDiff should accept different keyBy functions for A and B', () => {
-        let output = jest.fn();
+    it('zipDiff should emit items that will never have matches when an input observable finishes', () => {
 
-        const subjectA = new Subject();
-        const subjectB = new Subject();
-
-        zipDiff(subjectA, subjectB, item => item.id, number => number).subscribe(output);
-
-        subjectA.next({
-            id: 100,
-            name: 'Thor the Almighty'
+        const testScheduler = new TestScheduler((actual, expected) => {
+            expect(actual).toEqual(expected);
         });
 
-        subjectB.next(100);
+        testScheduler.run(helpers => {
+            const {cold, expectObservable, expectSubscriptions} = helpers;
 
-        expect(output).toHaveBeenCalledTimes(1);
-        expect(output.mock.calls[0][0]).toEqual({
-            a: {
-                id: 100,
-                name: 'Thor the Almighty'
-            },
-            b: 100
+            let values = {
+                w: {
+                    b: 'w'
+                },
+                x: {
+                    a: 'x'
+                },
+                y: {
+                    b: 'y'
+                },
+                z: {
+                    a: 'z'
+                }
+            };
+
+            const a =   cold('--x-z---|       ');
+            const asubs =    '^-------!       ';
+            const b =   cold('------y----w---|');
+            const bsubs =    '^--------------!';
+            const expected = '--------y--w---(xz|)';
+
+            expectObservable(
+                zipDiff(a, b, ii => ii)
+            ).toBe(expected, values);
+
+            expectSubscriptions(a.subscriptions).toBe(asubs);
+            expectSubscriptions(b.subscriptions).toBe(bsubs);
         });
     });
 
-    it('zipDiff should dedupe items with the same key', () => {
-        let output = jest.fn();
+    it('zipDiff should accept a keyBy function', () => {
 
-        const subjectA = new Subject();
-        const subjectB = new Subject();
-
-        zipDiff(subjectA, subjectB, item => item.id).subscribe(output);
-
-        subjectA.next({
-            id: '100',
-            name: 'Thor the Almighty'
+        const testScheduler = new TestScheduler((actual, expected) => {
+            expect(actual).toEqual(expected);
         });
 
-        subjectA.next({
-            id: '100',
-            name: 'Thor the Almighty'
+        testScheduler.run(helpers => {
+            const {cold, expectObservable, expectSubscriptions} = helpers;
+
+            let inputValuesA = {
+                x: {
+                    id: 'X',
+                    name: 'Xylophone'
+                },
+                y: {
+                    id: 'Y',
+                    name: 'Yellow'
+                }
+            };
+
+            let inputValuesB = {
+                x: {
+                    id: 'X',
+                    name: 'Xray'
+                },
+                y: {
+                    id: 'Y',
+                    name: 'Yak'
+                }
+            };
+
+            let outputValues = {
+                x: {
+                    a: {
+                        id: 'X',
+                        name: 'Xylophone'
+                    },
+                    b: {
+                        id: 'X',
+                        name: 'Xray'
+                    }
+                },
+                y: {
+                    a: {
+                        id: 'Y',
+                        name: 'Yellow'
+                    },
+                    b: {
+                        id: 'Y',
+                        name: 'Yak'
+                    }
+                }
+            };
+
+            const a =   cold('-x-----y---|', inputValuesA);
+            const b =   cold('---y-x-----|', inputValuesB);
+            const subs =     '^----------!';
+            const expected = '-----x-y---|';
+
+            expectObservable(
+                zipDiff(a, b, ii => ii.id)
+            ).toBe(expected, outputValues);
+
+            expectSubscriptions(a.subscriptions).toBe(subs);
+            expectSubscriptions(b.subscriptions).toBe(subs);
+        });
+    });
+
+    it('zipDiff should accept two keyBy functions to uise on each input observable', () => {
+
+        const testScheduler = new TestScheduler((actual, expected) => {
+            expect(actual).toEqual(expected);
         });
 
-        expect(output).toHaveBeenCalledTimes(0);
+        testScheduler.run(helpers => {
+            const {cold, expectObservable, expectSubscriptions} = helpers;
 
-        subjectA.complete();
-        subjectB.complete();
+            let inputValuesA = {
+                x: {
+                    id: 'X',
+                    name: 'Xylophone'
+                },
+                y: {
+                    id: 'Y',
+                    name: 'Yellow'
+                }
+            };
 
-        // zipDiff should dedupe items with the same key
-        expect(output).toHaveBeenCalledTimes(1);
-        expect(output.mock.calls[0][0]).toEqual({
-            a: {
-                id: '100',
-                name: 'Thor the Almighty'
-            }
+            let inputValuesB = {
+                x: {
+                    foo: 'X',
+                    name: 'Xray'
+                },
+                y: {
+                    foo: 'Y',
+                    name: 'Yak'
+                }
+            };
+
+            let outputValues = {
+                x: {
+                    a: {
+                        id: 'X',
+                        name: 'Xylophone'
+                    },
+                    b: {
+                        foo: 'X',
+                        name: 'Xray'
+                    }
+                },
+                y: {
+                    a: {
+                        id: 'Y',
+                        name: 'Yellow'
+                    },
+                    b: {
+                        foo: 'Y',
+                        name: 'Yak'
+                    }
+                }
+            };
+
+            const a =   cold('-x-----y---|', inputValuesA);
+            const b =   cold('---y-x-----|', inputValuesB);
+            const subs =     '^----------!';
+            const expected = '-----x-y---|';
+
+            expectObservable(
+                zipDiff(a, b, ii => ii.id, ii => ii.foo)
+            ).toBe(expected, outputValues);
+
+            expectSubscriptions(a.subscriptions).toBe(subs);
+            expectSubscriptions(b.subscriptions).toBe(subs);
+        });
+    });
+
+    it('zipDiff should dedupe identical keys from same input observable', () => {
+
+        const testScheduler = new TestScheduler((actual, expected) => {
+            expect(actual).toEqual(expected);
+        });
+
+        testScheduler.run(helpers => {
+            const {cold, expectObservable, expectSubscriptions} = helpers;
+
+            let values = {
+                x: {
+                    a: 'x',
+                    b: 'x'
+                }
+            };
+
+            const a =   cold('-x-x-------|');
+            const b =   cold('------x----|');
+            const subs =     '^----------!';
+            const expected = '------x----|';
+
+            expectObservable(
+                zipDiff(a, b, ii => ii)
+            ).toBe(expected, values);
+
+            expectSubscriptions(a.subscriptions).toBe(subs);
+            expectSubscriptions(b.subscriptions).toBe(subs);
         });
     });
 

@@ -2,6 +2,12 @@
 
 Rxjs algorithms.
 
+- [zipDiff](#zipDiff)
+- [operators/complete](#operators/complete)
+- [dynamodb/batchGet](#dynamodb/batchGet)
+- [dynamodb/batchWrite](#dynamodb/batchWrite)
+- [dynamodb/queryAll](#dynamodb/queryAll)
+
 ## zipDiff
 
 Takes two observables and finds which items exist in one or both, according to a key.
@@ -69,4 +75,76 @@ obs.pipe(
         console.log("I'm done mate");
     })
 );
+```
+
+## dynamodb/batchGet
+
+Turns AWS `DocClient.batchGet()` into a pipeable observable which accepts an observable of ids and calls `batchGet()`, batching items to 100 at a time and retrying dynamo's `UnprocessedKeys` automatically.
+
+
+```js
+import {batchGet} from 'blueflag-rxjs/dynamodb';
+
+batchGet({
+    docClient: DocClient,
+    tableName: string
+}): Observable => Observable
+```
+
+```js
+let keys = [
+    {id: 1},
+    {id: 2},
+    {id: 3}
+];
+
+from(keys)
+    .pipe(batchGet)
+    .toPromise();
+```
+
+
+## dynamodb/batchWrite
+
+Turns AWS `DocClient.batchWrite()` into a pipeable observable which accepts an observable of params and calls `batchWrite()`, batching items to 25 at a time and retrying dynamo's `UnprocessedItems` automatically.
+
+
+```js
+import {batchWrite} from 'blueflag-rxjs/dynamodb';
+
+batchWrite({
+    docClient: DocClient,
+    tableName: string
+}): Observable => Observable
+```
+
+```js
+from([{
+    {
+        PutRequest: {
+            Item: {
+                foo: 200
+            }
+        }
+    }
+    ...
+}])
+    .pipe(batchWrite)
+    .toPromise();
+```
+
+
+## dynamodb/queryAll
+
+Turns AWS `DocClient.query()` into an observable which will by default keep requesting whenever there is more data to be paginated.
+
+
+```js
+import {queryAll} from 'blueflag-rxjs/dynamodb';
+
+queryAll(
+    docClient: DocClient,
+    params: Params,
+    feedbackObservable: ?Observable
+): Observable
 ```
