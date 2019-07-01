@@ -6,7 +6,6 @@ describe('queryAll', () => {
 
     it('queryAll should pass params and make request', async () => {
 
-        expect.assertions(3);
 
         let params = {
             TableName: 'fake-table'
@@ -24,18 +23,22 @@ describe('queryAll', () => {
                 }))
         };
 
-        let obs = queryAll(docClient, params);
+        let tapFn = jest.fn();
 
-        obs.subscribe(response => {
-            expect(response).toEqual(responsePayload);
-            expect(docClient.query).toHaveBeenCalledTimes(1);
-            expect(docClient.query.mock.calls[0][0]).toEqual(params);
-        });
+        await queryAll(docClient, params)
+            .pipe(tap(tapFn))
+            .toPromise();
+
+        expect(tapFn).toHaveBeenCalledTimes(3);
+        expect(tapFn.mock.calls[0][0]).toBe(100);
+        expect(tapFn.mock.calls[1][0]).toBe(200);
+        expect(tapFn.mock.calls[2][0]).toBe(300);
+
+        expect(docClient.query).toHaveBeenCalledTimes(1);
+        expect(docClient.query.mock.calls[0][0]).toEqual(params);
     });
 
     it('queryAll should re-request with ExclusiveStartKey if LastEvaluatedKey is present on response', async () => {
-
-        expect.assertions(6);
 
         let params = {
             TableName: 'fake-table'
@@ -82,19 +85,30 @@ describe('queryAll', () => {
                 }))
         };
 
-        let obs = queryAll(docClient, params);
+        let tapFn = jest.fn();
 
-        let i = 0;
-        obs.subscribe(response => {
-            expect(response).toEqual(responsePayloads[i]);
-            expect(docClient.query.mock.calls[i][0]).toEqual(expectedParams[i]);
-            i++;
-        });
+        await queryAll(docClient, params)
+            .pipe(tap(tapFn))
+            .toPromise();
+
+        expect(tapFn).toHaveBeenCalledTimes(9);
+        expect(tapFn.mock.calls[0][0]).toBe(100);
+        expect(tapFn.mock.calls[1][0]).toBe(200);
+        expect(tapFn.mock.calls[2][0]).toBe(300);
+        expect(tapFn.mock.calls[3][0]).toBe(400);
+        expect(tapFn.mock.calls[4][0]).toBe(500);
+        expect(tapFn.mock.calls[5][0]).toBe(600);
+        expect(tapFn.mock.calls[6][0]).toBe(700);
+        expect(tapFn.mock.calls[7][0]).toBe(800);
+        expect(tapFn.mock.calls[8][0]).toBe(900);
+
+        expect(docClient.query).toHaveBeenCalledTimes(3);
+        expect(docClient.query.mock.calls[0][0]).toEqual(expectedParams[0]);
+        expect(docClient.query.mock.calls[1][0]).toEqual(expectedParams[1]);
+        expect(docClient.query.mock.calls[2][0]).toEqual(expectedParams[2]);
     });
 
-    it('queryAll should accept feedback observable that gets used in each feedback loop', async () => {
-
-        expect.assertions(6);
+    it('queryAll should accept feedback pipe that gets used in each feedback loop', async () => {
 
         let params = {
             TableName: 'fake-table'
@@ -127,17 +141,17 @@ describe('queryAll', () => {
                 }))
         };
 
-        let tapFunction = jest.fn();
-        let feedbackObservable = (obs) => obs.pipe(tap(tapFunction));
+        let tapFn = jest.fn();
+        let feedbackPipeFn = jest.fn(obs => obs);
 
-        let obs = queryAll(docClient, params, feedbackObservable);
+        await queryAll(docClient, params, feedbackPipeFn)
+            .pipe(tap(tapFn))
+            .toPromise();
 
-        let i = 0;
-        obs.subscribe(response => {
-            expect(response).toEqual(responsePayloads[i]);
-            expect(tapFunction.mock.calls.length).toBe(i);
-            i++;
-        });
+        expect(tapFn).toHaveBeenCalledTimes(9);
+        expect(docClient.query).toHaveBeenCalledTimes(3);
+        expect(feedbackPipeFn).toHaveBeenCalledTimes(2);
+
     });
 
 });

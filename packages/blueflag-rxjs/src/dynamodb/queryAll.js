@@ -1,7 +1,11 @@
 //@flow
 import {Observable} from 'rxjs';
+import {of} from 'rxjs';
 import {EMPTY} from 'rxjs';
+import {concatMap} from 'rxjs/operators';
+import {flatMap} from 'rxjs/operators';
 import {expand} from 'rxjs/operators';
+import {takeWhile} from 'rxjs/operators';
 
 type QueryResult = {
     promise: () => Promise<any>
@@ -18,16 +22,19 @@ type Response = {
     LastEvaluatedKey?: string
 };
 
-type FeedbackObservable = (obs: Observable) => Observable;
+type FeedbackPipe = (obs: Observable) => Observable;
 
-export default (docClient: DocClient, params: any, feedbackObservable: FeedbackObservable = obs => obs): Observable => {
+export default (docClient: DocClient, params: any, feedbackPipe: FeedbackPipe = obs => obs): Observable => {
 
     let sendQuery = (params: any): Observable => {
         return new Observable((subscriber: any) => {
             docClient
                 .query(params)
                 .promise()
-                .then((response: Response) => subscriber.next(response));
+                .then((response: Response) => {
+                    subscriber.next(response);
+                    subscriber.complete();
+                });
         });
     };
 
@@ -35,14 +42,17 @@ export default (docClient: DocClient, params: any, feedbackObservable: FeedbackO
         expand((response: Response) => {
             let {LastEvaluatedKey} = response;
             if(LastEvaluatedKey) {
-                let obs = sendQuery({
-                    ...params,
-                    ExclusiveStartKey: LastEvaluatedKey
-                });
-
-                return feedbackObservable(obs);
+                return of(response).pipe(
+                    feedbackPipe,
+                    flatMap(() => sendQuery({
+                        ...params,
+                        ExclusiveStartKey: LastEvaluatedKey
+                    }))
+                );
             }
             return EMPTY;
-        })
+        }),
+        takeWhile(response => response.LastEvaluatedKey, true),
+        concatMap(response => response.Items)
     );
 };
