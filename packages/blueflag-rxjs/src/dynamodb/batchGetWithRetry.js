@@ -63,11 +63,11 @@ export default (config: Config, feedbackPipe: FeedbackPipe = obs => obs) => {
 
     return pipe(
         bufferCount(MAX_BATCH_READ),
-        flatMap((idArray) => {
+        flatMap((keyArray) => {
             return sendQueryWithRetry({
                 RequestItems: {
                     [config.tableName]: {
-                        Keys: idArray
+                        Keys: keyArray
                     }
                 }
             });

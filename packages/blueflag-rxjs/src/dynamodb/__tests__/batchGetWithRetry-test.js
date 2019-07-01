@@ -20,7 +20,11 @@ describe('batchGetWithRetry', () => {
 
         let tapFn = jest.fn();
 
-        let params = [1,2,3];
+        let params = [
+            {id: 1},
+            {id: 2},
+            {id: 3}
+        ];
 
         await from(params)
             .pipe(
@@ -63,7 +67,7 @@ describe('batchGetWithRetry', () => {
         let params = [];
 
         for(let i = 0; i < 130; i++) {
-            params.push(i);
+            params.push({id: i});
         }
 
         await from(params)
@@ -126,7 +130,11 @@ describe('batchGetWithRetry', () => {
 
         let tapFn = jest.fn();
 
-        let params = [1,2,3];
+        let params = [
+            {id: 1},
+            {id: 2},
+            {id: 3}
+        ];
 
         await from(params)
             .pipe(

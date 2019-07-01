@@ -92,7 +92,13 @@ batchGet({
 ```
 
 ```js
-from([1,2,3])
+let keys = [
+    {id: 1},
+    {id: 2},
+    {id: 3}
+];
+
+from(keys)
     .pipe(batchGet)
     .toPromise();
 ```
