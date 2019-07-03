@@ -38,6 +38,40 @@ describe('zipDiff', () => {
         });
     });
 
+    it('zipDiff should emit items when they match when receiving everything at once', () => {
+
+        const testScheduler = new TestScheduler((actual, expected) => {
+            expect(actual).toEqual(expected);
+        });
+
+        testScheduler.run(helpers => {
+            const {cold, expectObservable, expectSubscriptions} = helpers;
+
+            let values = {
+                x: {
+                    a: 'x',
+                    b: 'x'
+                },
+                y: {
+                    a: 'y',
+                    b: 'y'
+                }
+            };
+
+            const a =   cold('--(xy|)');
+            const b =   cold('--(xy|)');
+            const subs =     '^-!';
+            const expected = '--(xy|)';
+
+            expectObservable(
+                zipDiff(a, b, ii => ii)
+            ).toBe(expected, values);
+
+            expectSubscriptions(a.subscriptions).toBe(subs);
+            expectSubscriptions(b.subscriptions).toBe(subs);
+        });
+    });
+
     it('zipDiff should emit items that dont have matches once an input observable is finished', () => {
 
         const testScheduler = new TestScheduler((actual, expected) => {
@@ -71,6 +105,41 @@ describe('zipDiff', () => {
 
             expectSubscriptions(a.subscriptions).toBe(subs);
             expectSubscriptions(b.subscriptions).toBe(subs);
+        });
+    });
+
+    it('zipDiff should emit items when one observable closes first', () => {
+
+        const testScheduler = new TestScheduler((actual, expected) => {
+            expect(actual).toEqual(expected);
+        });
+
+        testScheduler.run(helpers => {
+            const {cold, expectObservable, expectSubscriptions} = helpers;
+
+            let values = {
+                x: {
+                    a: 'x',
+                    b: 'x'
+                },
+                y: {
+                    a: 'y',
+                    b: 'y'
+                }
+            };
+
+            const a =   cold('-x-y-|      ');
+            const asubs =    '^----!      ';
+            const b =   cold('-------x-y-|');
+            const bsubs =    '^----------!';
+            const expected = '-------x-y-|';
+
+            expectObservable(
+                zipDiff(a, b, ii => ii)
+            ).toBe(expected, values);
+
+            expectSubscriptions(a.subscriptions).toBe(asubs);
+            expectSubscriptions(b.subscriptions).toBe(bsubs);
         });
     });
 
@@ -269,6 +338,36 @@ describe('zipDiff', () => {
             const b =   cold('------x----|');
             const subs =     '^----------!';
             const expected = '------x----|';
+
+            expectObservable(
+                zipDiff(a, b, ii => ii)
+            ).toBe(expected, values);
+
+            expectSubscriptions(a.subscriptions).toBe(subs);
+            expectSubscriptions(b.subscriptions).toBe(subs);
+        });
+    });
+
+    it('zipDiff should not resend identical keys if they happen a second time', () => {
+
+        const testScheduler = new TestScheduler((actual, expected) => {
+            expect(actual).toEqual(expected);
+        });
+
+        testScheduler.run(helpers => {
+            const {cold, expectObservable, expectSubscriptions} = helpers;
+
+            let values = {
+                x: {
+                    a: 'x',
+                    b: 'x'
+                }
+            };
+
+            const a =   cold('-x---x-----|');
+            const b =   cold('---x-------|');
+            const subs =     '^----------!';
+            const expected = '---x-------|';
 
             expectObservable(
                 zipDiff(a, b, ii => ii)

@@ -40,12 +40,17 @@ export default (obsA: Observable, obsB: Observable, keyBy: Keyer, keyByB: ?Keyer
     // buffer (stateful)
     //
 
-    let buffer: Map<any, TaggedItem> = new Map();
+    // buffer contains TaggedItem's keyed by their keys
+    // once an item leaves the buffer, the key remains
+    // and the value is set to undefined
+    let buffer: Map<any, ?TaggedItem> = new Map();
 
     let bufferAsObservable = (): TaggedItem[] => {
         let arr = [];
         for(let value of buffer.values()) {
-            arr.push(value);
+            if(value) {
+                arr.push(value);
+            }
         }
         return from(arr);
     };
@@ -54,6 +59,38 @@ export default (obsA: Observable, obsB: Observable, keyBy: Keyer, keyByB: ?Keyer
         a: false,
         b: false
     };
+
+    // this will add items to buffer, and remove matching items
+    // if items match, true is returned
+
+    let pipeThroughBuffer = () => map((item: TaggedItem): ?SourceKeyedItem => {
+        let {key, source} = item;
+        let bufferItem: ?TaggedItem = buffer.get(key);
+
+        // if key exists in buffer with an undefined value
+        // then this key has already been and gone through the buffer
+        // so throw this new item away
+        if(!bufferItem && buffer.has(key)) {
+            return;
+        }
+
+        if(bufferItem && item.source !== bufferItem.source) {
+            // log(`matched ${source}'s ${key} with item in buffer`);
+            buffer.set(key, undefined);
+            return {
+                ...taggedItemToSourceKeyedItem(item),
+                ...taggedItemToSourceKeyedItem(bufferItem)
+            };
+        }
+
+        if(skipBuffer[source]) {
+            // log(`${source}'s ${key} skips buffer`);
+            return taggedItemToSourceKeyedItem(item);
+        }
+
+        // log(`adding ${source}'s ${key} to buffer`);
+        buffer.set(key, item);
+    });
 
     //
     // type conversion
@@ -73,49 +110,16 @@ export default (obsA: Observable, obsB: Observable, keyBy: Keyer, keyByB: ?Keyer
     // operators
     //
 
-    let bufferAndFilterMatching = () => pipe(
-        filter((item: TaggedItem): boolean => {
-            let {key, source} = item;
-
-            if(skipBuffer[source]) {
-                return true;
-            }
-
-            let bufferItem: ?TaggedItem = buffer.get(key);
-            let alreadyHasKey = bufferItem
-                && item.source !== bufferItem.source;
-
-            if(!alreadyHasKey) {
-                buffer.set(key, item);
-                return false;
-            }
-            return true;
-        }),
-        map((item: TaggedItem): SourceKeyedItem => {
-
-            let sourceKeyedItem: SourceKeyedItem = taggedItemToSourceKeyedItem(item);
-
-            let bufferItem: ?TaggedItem = buffer.get(item.key);
-            if(bufferItem) {
-                sourceKeyedItem = {
-                    ...sourceKeyedItem,
-                    ...taggedItemToSourceKeyedItem(bufferItem)
-                };
-                buffer.delete(item.key);
-            }
-            return sourceKeyedItem;
-        })
-    );
-
     let sendBufferedItemsOnComplete = (source: "a"|"b") => pipe(
         complete(),
         tap(() => {
+            // log(`${source} has completed`);
             skipBuffer[source] = true;
         }),
         flatMap(() => bufferAsObservable()),
         filter((item: TaggedItem): boolean => item.source === source),
         tap((item: TaggedItem) => {
-            buffer.delete(item.key);
+            buffer.set(item.key, undefined);
         }),
         map(taggedItemToSourceKeyedItem)
     );
@@ -129,21 +133,28 @@ export default (obsA: Observable, obsB: Observable, keyBy: Keyer, keyByB: ?Keyer
 
     let obsTaggedA: Observable = obsA.pipe(
         map(itemToTaggedItem('a')),
+        pipeThroughBuffer(),
         share()
     );
 
     let obsTaggedB: Observable = obsB.pipe(
         map(itemToTaggedItem('b')),
+        pipeThroughBuffer(),
         share()
     );
 
-    // merge input observables, and use the buffer
-    // emitting only items that appear in both A and B
-    let obsBoth: Observable = merge(obsTaggedA, obsTaggedB).pipe(bufferAndFilterMatching());
-
     // on close A, release all B items in buffer and vice versa because they'll never match anything
-    let obsOnlyA: Observable = obsTaggedB.pipe(sendBufferedItemsOnComplete('a'));
-    let obsOnlyB: Observable = obsTaggedA.pipe(sendBufferedItemsOnComplete('b'));
+    let obsFlushA: Observable = obsTaggedB.pipe(
+        sendBufferedItemsOnComplete('a')
+    );
 
-    return merge(obsOnlyA, obsOnlyB, obsBoth);
+    let obsFlushB: Observable = obsTaggedA.pipe(
+        sendBufferedItemsOnComplete('b')
+    );
+
+    let obsNonBuffered: Observable = merge(obsTaggedA, obsTaggedB).pipe(
+        filter(Boolean)
+    );
+
+    return merge(obsFlushA, obsFlushB, obsNonBuffered);
 };
