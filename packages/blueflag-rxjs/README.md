@@ -3,6 +3,7 @@
 Rxjs algorithms.
 
 - [zipDiff](#zipDiff)
+- [operators/bufferDistinct](#operators/bufferDistinct)
 - [operators/complete](#operators/complete)
 - [dynamodb/batchGet](#dynamodb/batchGet)
 - [dynamodb/batchWrite](#dynamodb/batchWrite)
@@ -57,6 +58,45 @@ zipDiff(obsA, obsB, itemA => itemA.id)
 }
 
 ```
+
+## operators/bufferDistinct
+
+Buffers items while the given predicate function returns the same thing, and emits the buffer contents when the given predicate function returns something else or the stream closes. Value comparison is performed using `Object.is()`.
+
+```js
+import {bufferDistinct} from 'blueflag-rxjs/operators';
+
+bufferDistinct(item => comparisonValue)
+```
+
+```js
+obs.pipe(
+    bufferDistinct(item => item.id)
+);
+
+// Obs adds {id: 'a', value: 1}
+// Obs adds {id: 'a', value: 2}
+// Obs adds {id: 'b', value: 3}
+// Obs adds {id: 'c', value: 4}
+// Obs adds {id: 'c', value: 5}
+
+// output:
+
+[
+    {id: 'a', value: 1},
+    {id: 'a', value: 2}
+]
+
+[
+    {id: 'b', value: 3}
+]
+
+[
+    {id: 'c', value: 4},
+    {id: 'c', value: 5}
+]
+```
+
 
 ## operators/complete
 
