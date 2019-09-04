@@ -9,17 +9,18 @@ export default (predicate: Predicate) => (source: Observable): Observable => {
 
         let buffer: Value[] = [];
         let first: boolean = true;
-        let prevValue: Value = undefined;
+        let prevComparisonValue: any = undefined;
 
         return source.subscribe(
             (value: Value) => {
-                if(!first && !Object.is(predicate(value), prevValue)) {
+                let comparisonValue: any = predicate(value);
+                if(!first && !Object.is(comparisonValue, prevComparisonValue)) {
                     subscriber.next(buffer);
                     buffer = [];
                 }
 
                 buffer.push(value);
-                prevValue = value;
+                prevComparisonValue = comparisonValue;
                 first = false;
             },
             (err) => subscriber.error(err),
