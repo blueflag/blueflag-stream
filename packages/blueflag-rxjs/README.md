@@ -2,12 +2,55 @@
 
 Rxjs algorithms.
 
+- [multiCache](#multiCache)
 - [zipDiff](#zipDiff)
 - [operators/bufferDistinct](#operators/bufferDistinct)
 - [operators/complete](#operators/complete)
 - [dynamodb/batchGet](#dynamodb/batchGet)
 - [dynamodb/batchWrite](#dynamodb/batchWrite)
 - [dynamodb/queryAll](#dynamodb/queryAll)
+
+## multiCache
+
+Accepts an array of sources, intended to be in-memory caches, database caches and data sources, and for each item attempts to retrieve the item from each source sequentially until it is found.
+It also saves items in caches once found.
+it does not guarantee item order.
+
+```js
+import {multiCache} from 'blueflag-rxjs';
+
+let myMemoryCacheOperator = {
+    name: 'memory-cache',
+    load, // operator that loads from cache
+    save, // operator that saves to cache (not needed on data source)
+    clear, // operator that clears item from cache (not needed on data source)
+};
+
+// ^ all of the above operators must accept a payload of {id, item} and return {id, item}
+//   item may be undefined if not known or not found
+
+let cache = multiCache([
+    myMemoryCacheOperator, // first cache
+    myDatabaseCacheOperator, // deeper cache
+    myDataSource // data source
+])
+
+from([
+    {id: 'a'},
+    {id: 'b'},
+    {id: 'c'}
+])
+    .pipe(cache.load);
+
+// Example output observable:
+
+// {id: 'a', item: {id: 'a', name: 'Hi'}, source: 'data-source'}
+// {id: 'b', item: {id: 'b', name: 'Hello'}, source: 'memory-cache'}
+// {id: 'c', item: undefined, source: undefined}
+
+```
+
+
 
 ## zipDiff
 
