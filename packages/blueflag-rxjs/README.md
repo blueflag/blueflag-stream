@@ -12,7 +12,7 @@ Rxjs algorithms.
 
 ## multiCache
 
-Accepts an array of sources, intended to be in-memory caches, database caches and data sources, and for each item attempts to retrieve the item from each source sequentially until it is found.
+Accepts an array of sources (intended to be things like in-memory caches, database caches and actual data sources) and for each item attempts to retrieve the item from each source sequentially until it is found.
 It also saves items in caches once found.
 it does not guarantee item order.
 
