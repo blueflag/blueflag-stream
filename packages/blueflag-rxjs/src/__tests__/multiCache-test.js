@@ -1,9 +1,13 @@
 // @flow
 import {TestScheduler} from 'rxjs/testing';
 import multiCache from '../multiCache';
+import memoryCache from '../memoryCache';
 
+import {of} from 'rxjs';
 import {map} from 'rxjs/operators';
 import {tap} from 'rxjs/operators';
+import {delay} from 'rxjs/operators';
+import {flatMap} from 'rxjs/operators';
 
 describe('multiCache', () => {
 
@@ -527,4 +531,71 @@ describe('multiCache', () => {
         });
     });
 
+    it('should work using real caches', () => {
+        let fetchValues = {
+            a: {
+                id: 'a',
+                item: 'item-a'
+            },
+            b: {
+                id: 'b',
+                item: 'item-b'
+            }
+        };
+
+        const fetch = jest.fn((payload) => of(fetchValues[payload.id]).pipe(delay(3)));
+
+        const testScheduler = new TestScheduler((actual, expected) => {
+            expect(actual).toEqual(expected);
+            expect(fetch).toHaveBeenCalledTimes(2);
+        });
+
+        testScheduler.run(helpers => {
+            const {cold, expectObservable, expectSubscriptions} = helpers;
+
+            const inputObs = cold('--a-b----a-b-|');
+            const subs =          '^------------!';
+            const expected =      '-----a-b-A-B-|';
+
+            const source = {
+                name: 'source',
+                load: flatMap(fetch)
+            };
+
+            expectSubscriptions(inputObs.subscriptions).toBe(subs);
+
+            let cache = multiCache([
+                memoryCache(),
+                source
+            ]);
+
+            let values = {
+                a: {
+                    id: 'a',
+                    item: 'item-a',
+                    source: 'source'
+                },
+                b: {
+                    id: 'b',
+                    item: 'item-b',
+                    source: 'source'
+                },
+                A: {
+                    id: 'a',
+                    item: 'item-a',
+                    source: 'memory-cache'
+                },
+                B: {
+                    id: 'b',
+                    item: 'item-b',
+                    source: 'memory-cache'
+                }
+            };
+
+            expectObservable(inputObs.pipe(
+                map(id => ({id})),
+                cache.load,
+            )).toBe(expected, values);
+        });
+    });
 });
