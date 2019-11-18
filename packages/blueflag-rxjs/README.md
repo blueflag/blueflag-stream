@@ -3,6 +3,7 @@
 Rxjs algorithms.
 
 - [multiCache](#multiCache)
+- [memoryCache](#memoryCache)
 - [zipDiff](#zipDiff)
 - [operators/bufferDistinct](#operators/bufferDistinct)
 - [operators/complete](#operators/complete)
@@ -50,7 +51,44 @@ from([
 
 ```
 
+## memoryCache
 
+An rx cache that works a lot like [graphql/dataloader](https://github.com/graphql/dataloader).
+
+Usage with `multiCache`:
+
+```js
+import {multiCache} from 'blueflag-rxjs';
+import {memoryCache} from 'blueflag-rxjs';
+
+let dataSource = {
+    name: 'data-source',
+    load: flatMap(async (payload) => ({
+        ...payload,
+        item: await fetch(payload.id)
+    }))
+};
+
+let cache = multiCache([
+    memoryCache(),
+    dataSource
+]);
+
+from([
+    {id: 'a'},
+    {id: 'b'},
+    {id: 'a'}
+])
+    .pipe(cache.load);
+
+
+// Example output observable:
+
+// {id: 'a', item: {id: 'a', name: 'Hi'}, source: 'data-source'}
+// {id: 'b', item: {id: 'b', name: 'Hello'}, source: 'data-source'}
+// {id: 'a', item: {id: 'a', name: 'Hi'}, source: 'memory-cache'}
+// a is only requested once
+```
 
 ## zipDiff
 
