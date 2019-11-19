@@ -20,8 +20,8 @@ type Operator<I,O> = (obs: Observable<I>) => Observable<O>;
 type Source = {
     name: string,
     load: Operator<Payload,Payload>,
-    save?: ?Operator<Payload,Payload>,
-    clear?: ?Operator<Payload,Payload>
+    +save?: ?Operator<Payload,Payload>,
+    +clear?: ?Operator<Payload,Payload>
 };
 
 type CacheStack = {
