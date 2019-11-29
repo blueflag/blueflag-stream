@@ -73,11 +73,6 @@ describe('memoryCache', () => {
             }
         };
 
-        const testScheduler = new TestScheduler((actual, expected) => {
-            expect(actual).toEqual(expected);
-            expect(fetch).toHaveBeenCalledTimes(1);
-        });
-
         let fetcher = flatMap((payload) => {
             if(payload.item) { // when used in multiCache, this check is done for you
                 return of(payload);
@@ -99,6 +94,7 @@ describe('memoryCache', () => {
         ).toPromise()
         expect(result).toEqual(result1)    
     })
+
 
     it('should collect values with a common id and return the result of the same fetch', () => {
 
