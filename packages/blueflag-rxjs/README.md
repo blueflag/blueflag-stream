@@ -235,7 +235,8 @@ import {batchWrite} from 'blueflag-rxjs/dynamodb';
 
 batchWrite({
     docClient: DocClient,
-    tableName: string
+    tableName: string,
+    returnItems?: boolean
 }): Observable => Observable
 ```
 
