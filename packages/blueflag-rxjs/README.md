@@ -7,8 +7,8 @@ Rxjs algorithms.
 - [zipDiff](#zipDiff)
 - [operators/bufferDistinct](#operators/bufferDistinct)
 - [operators/complete](#operators/complete)
-- [dynamodb/batchGet](#dynamodb/batchGet)
-- [dynamodb/batchWrite](#dynamodb/batchWrite)
+- [dynamodb/batchGetWithRetry](#dynamodb/batchGetWithRetry)
+- [dynamodb/batchWriteWithRetry](#dynamodb/batchWrite)
 - [dynamodb/queryAll](#dynamodb/queryAll)
 
 ## multiCache
@@ -198,17 +198,18 @@ obs.pipe(
 );
 ```
 
-## dynamodb/batchGet
+## dynamodb/batchGetWithRetry
 
 Turns AWS `DocClient.batchGet()` into a pipeable observable which accepts an observable of ids and calls `batchGet()`, batching items to 100 at a time and retrying dynamo's `UnprocessedKeys` automatically.
 
 
 ```js
-import {batchGet} from 'blueflag-rxjs/dynamodb';
+import {batchGetWithRetry} from 'blueflag-rxjs/dynamodb';
 
-batchGet({
+batchGetWithRetry({
     docClient: DocClient,
-    tableName: string
+    tableName: string,
+    returnItems?: boolean
 }): Observable => Observable
 ```
 
@@ -220,20 +221,20 @@ let keys = [
 ];
 
 from(keys)
-    .pipe(batchGet)
+    .pipe(batchGetWithRetry(...))
     .toPromise();
 ```
 
 
-## dynamodb/batchWrite
+## dynamodb/batchWriteWithRetry
 
 Turns AWS `DocClient.batchWrite()` into a pipeable observable which accepts an observable of params and calls `batchWrite()`, batching items to 25 at a time and retrying dynamo's `UnprocessedItems` automatically.
 
 
 ```js
-import {batchWrite} from 'blueflag-rxjs/dynamodb';
+import {batchWriteWithRetry} from 'blueflag-rxjs/dynamodb';
 
-batchWrite({
+batchWriteWithRetry({
     docClient: DocClient,
     tableName: string,
     returnItems?: boolean
@@ -251,7 +252,7 @@ from([{
     }
     ...
 }])
-    .pipe(batchWrite)
+    .pipe(batchWriteWithRetry(...))
     .toPromise();
 ```
 

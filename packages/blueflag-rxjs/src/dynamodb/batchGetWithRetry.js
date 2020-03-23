@@ -3,6 +3,7 @@ import {Observable} from 'rxjs';
 import {EMPTY} from 'rxjs';
 import {pipe} from 'rxjs';
 import {of} from 'rxjs';
+import {from} from 'rxjs';
 import {expand} from 'rxjs/operators';
 import {bufferCount} from 'rxjs/operators';
 import {flatMap} from 'rxjs/operators';
@@ -19,7 +20,8 @@ type DocClient = {
 
 type Config = {
     docClient: DocClient,
-    tableName: string
+    tableName: string,
+    returnItems?: boolean
 };
 
 type Response = {
@@ -71,6 +73,12 @@ export default (config: Config, feedbackPipe: FeedbackPipe = obs => obs) => {
                     }
                 }
             });
+        }),
+        flatMap(response => {
+            if(!config.returnItems) {
+                return of(response);
+            }
+            return from(response.Responses[config.tableName]);
         })
     );
 };
