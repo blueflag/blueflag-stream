@@ -59,6 +59,43 @@ describe('memoryCache', () => {
 
     });
 
+    it('should return the same thing twice with different subs', async () => {
+        const fetch = jest.fn((id) => of(values[id]).pipe(delay(3)));
+
+        let values = {
+            a: {
+                id: 'a',
+                item: 'item-a'
+            },
+            b: {
+                id: 'b',
+                item: 'item-b'
+            }
+        };
+
+        let fetcher = flatMap((payload) => {
+            if(payload.item) { // when used in multiCache, this check is done for you
+                return of(payload);
+            }
+            return fetch(payload.id);
+        });
+
+        let cache = memoryCache();
+
+        let result1 = await of(values.a).pipe(
+            cache.load,
+            fetcher,
+            cache.save
+        ).toPromise()
+        let result = await of(values.a).pipe(
+            cache.load,
+            fetcher,
+            cache.save
+        ).toPromise()
+        expect(result).toEqual(result1)    
+    })
+
+
     it('should collect values with a common id and return the result of the same fetch', () => {
 
         const fetch = jest.fn((id) => of(values[id]).pipe(delay(3)));

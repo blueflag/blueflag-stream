@@ -5,6 +5,7 @@
     "prep": "yarn && yarn lerna bootstrap",
     "bump": "yarn lerna publish",
     "build": "yarn lerna run build",
+    "test": "yarn lerna run test",
     "reinstall": "rm -rf node_modules && rm -rf packages/*/node_modules && yarn prep",
     "test-all": "yarn lerna run test-all",
     "watch": "yarn lerna run watch --parallel"
