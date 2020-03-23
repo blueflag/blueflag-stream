@@ -58,6 +58,8 @@ An rx cache that works a lot like [graphql/dataloader](https://github.com/graphq
 Usage with `multiCache`:
 
 ```js
+import {from} from 'rxjs'
+import {flatMap} from 'rxjs/operators'
 import {multiCache} from 'blueflag-rxjs';
 import {memoryCache} from 'blueflag-rxjs';
 
