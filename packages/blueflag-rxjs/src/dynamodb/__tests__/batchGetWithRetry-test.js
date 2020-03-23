@@ -169,5 +169,57 @@ describe('batchGetWithRetry', () => {
         expect(tapFn.mock.calls[1][0]).toEqual(responsePayloads[1]);
     });
 
+    it('batchGetWithRetry should return items if configured', async () => {
 
+        let responsePayload = {
+            UnprocessedKeys: {},
+            Responses: {
+                'fake-table': [
+                    {id: 1, name: 'Foo'},
+                    {id: 2, name: 'Bar'},
+                    {id: 3, name: 'Baz'}
+                ]
+            }
+        };
+
+        let docClient = {
+            batchGet: jest.fn()
+                .mockImplementation(() => ({
+                    promise: () => Promise.resolve(responsePayload)
+                }))
+        };
+
+        let tapFn = jest.fn();
+
+        let params = [
+            {id: 1},
+            {id: 2},
+            {id: 3}
+        ];
+
+        await from(params)
+            .pipe(
+                batchGetWithRetry({
+                    docClient,
+                    tableName: 'fake-table',
+                    returnItems: true
+                }),
+                tap(tapFn)
+            )
+            .toPromise();
+
+        expect(tapFn).toHaveBeenCalledTimes(3);
+        expect(tapFn.mock.calls[0][0]).toEqual(responsePayload.Responses['fake-table'][0]);
+        expect(tapFn.mock.calls[1][0]).toEqual(responsePayload.Responses['fake-table'][1]);
+        expect(tapFn.mock.calls[2][0]).toEqual(responsePayload.Responses['fake-table'][2]);
+
+        expect(docClient.batchGet).toHaveBeenCalledTimes(1);
+        expect(docClient.batchGet.mock.calls[0][0]).toEqual({
+            RequestItems: {
+                'fake-table': {
+                    Keys: params
+                }
+            }
+        });
+    });
 });

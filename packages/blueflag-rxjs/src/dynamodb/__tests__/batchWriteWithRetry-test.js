@@ -211,5 +211,66 @@ describe('batchWriteWithRetry', () => {
         expect(tapFn.mock.calls[1][0]).toEqual(responsePayloads[1]);
     });
 
+    it('batchWriteWithRetry should return items if configured', async () => {
 
+        let responsePayload = {
+            UnprocessedItems: {}
+        };
+
+        let docClient = {
+            batchWrite: jest.fn()
+                .mockImplementation(() => ({
+                    promise: () => Promise.resolve(responsePayload)
+                }))
+        };
+
+        let tapFn = jest.fn();
+
+        let params = [
+            {
+                PutRequest: {
+                    Item: {
+                        foo: 100
+                    }
+                }
+            },
+            {
+                PutRequest: {
+                    Item: {
+                        foo: 200
+                    }
+                }
+            },
+            {
+                PutRequest: {
+                    Item: {
+                        foo: 300
+                    }
+                }
+            }
+        ];
+
+        await from(params)
+            .pipe(
+                batchWriteWithRetry({
+                    docClient,
+                    tableName: 'fake-table',
+                    returnItems: true
+                }),
+                tap(tapFn)
+            )
+            .toPromise();
+
+        expect(tapFn).toHaveBeenCalledTimes(3);
+        expect(tapFn.mock.calls[0][0]).toEqual(params[0]);
+        expect(tapFn.mock.calls[1][0]).toEqual(params[1]);
+        expect(tapFn.mock.calls[2][0]).toEqual(params[2]);
+
+        expect(docClient.batchWrite).toHaveBeenCalledTimes(1);
+        expect(docClient.batchWrite.mock.calls[0][0]).toEqual({
+            RequestItems: {
+                'fake-table': params
+            }
+        });
+    });
 });
