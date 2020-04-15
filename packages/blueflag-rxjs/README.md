@@ -144,10 +144,12 @@ zipDiff(obsA, obsB, itemA => itemA.id)
 
 Buffers items while the given predicate function returns the same thing, and emits the buffer contents when the given predicate function returns something else or the stream closes. Value comparison is performed using `Object.is()`.
 
+If `flushObs` is passed, the buffer will be flushed any time `flushObs` emits.
+
 ```js
 import {bufferDistinct} from 'blueflag-rxjs/operators';
 
-bufferDistinct(item => comparisonValue)
+bufferDistinct(item => comparisonValue, flushObs: ?Observable)
 ```
 
 ```js
