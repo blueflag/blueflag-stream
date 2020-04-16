@@ -74,4 +74,32 @@ describe('bufferDistinct', () => {
         });
     });
 
+    it('bufferDistinct should accept flushObs and flush buffer when flushObs emits', () => {
+
+        const testScheduler = new TestScheduler((actual, expected) => {
+            expect(actual).toEqual(expected);
+        });
+
+        testScheduler.run(helpers => {
+            const {cold, expectObservable, expectSubscriptions} = helpers;
+
+            const e1 =  cold('-a-a-b-b-----c-|');
+            const e2 =  cold('---------x-y---|');
+            const subs =     '^--------------!';
+            const expected = '-----A---X-----(C|)';
+
+            const values = {
+                A: ['a','a'],
+                X: ['b','b'],
+                C: ['c']
+            };
+
+            expectObservable(
+                e1.pipe(bufferDistinct(value => value, e2))
+            ).toBe(expected, values);
+
+            expectSubscriptions(e1.subscriptions).toBe(subs);
+        });
+    });
+
 });
