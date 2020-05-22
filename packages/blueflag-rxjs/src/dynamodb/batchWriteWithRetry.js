@@ -44,6 +44,8 @@ export default (config: Config, feedbackPipe: FeedbackPipe = obs => obs) => {
                 .then((response: Response) => {
                     subscriber.next(response);
                     subscriber.complete();
+                }, (err: any) => {
+                    subscriber.error(err);
                 });
         });
     };
