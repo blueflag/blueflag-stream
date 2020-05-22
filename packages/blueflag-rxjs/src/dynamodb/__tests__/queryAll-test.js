@@ -154,4 +154,25 @@ describe('queryAll', () => {
 
     });
 
+    it('queryAll should handle errors', async () => {
+        expect.assertions(1);
+
+        let params = {
+            TableName: 'fake-table'
+        };
+
+        let docClient = {
+            query: jest.fn()
+                .mockImplementation(() => ({
+                    promise: () => Promise.reject('!!!')
+                }))
+        };
+
+        await queryAll(docClient, params)
+            .toPromise()
+            .catch(e => {
+                expect(e).toBe('!!!');
+            });
+    });
+
 });

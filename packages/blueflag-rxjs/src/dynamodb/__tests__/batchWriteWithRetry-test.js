@@ -273,4 +273,27 @@ describe('batchWriteWithRetry', () => {
             }
         });
     });
+
+    it('batchWriteWithRetry should handle errors', async () => {
+        expect.assertions(1);
+
+        let docClient = {
+            batchWrite: jest.fn()
+                .mockImplementation(() => ({
+                    promise: () => Promise.reject('!!!')
+                }))
+        };
+
+        await from([123])
+            .pipe(
+                batchWriteWithRetry({
+                    docClient,
+                    tableName: 'fake-table'
+                })
+            )
+            .toPromise()
+            .catch(e => {
+                expect(e).toBe('!!!');
+            });
+    });
 });

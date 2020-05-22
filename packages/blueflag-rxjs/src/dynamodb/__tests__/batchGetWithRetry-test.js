@@ -222,4 +222,27 @@ describe('batchGetWithRetry', () => {
             }
         });
     });
+
+    it('batchGetWithRetry should handle errors', async () => {
+        expect.assertions(1);
+
+        let docClient = {
+            batchGet: jest.fn()
+                .mockImplementation(() => ({
+                    promise: () => Promise.reject('!!!')
+                }))
+        };
+
+        await from([123])
+            .pipe(
+                batchGetWithRetry({
+                    docClient,
+                    tableName: 'fake-table'
+                })
+            )
+            .toPromise()
+            .catch(e => {
+                expect(e).toBe('!!!');
+            });
+    });
 });

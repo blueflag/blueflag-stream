@@ -34,6 +34,8 @@ export default (docClient: DocClient, params: any, feedbackPipe: FeedbackPipe = 
                 .then((response: Response) => {
                     subscriber.next(response);
                     subscriber.complete();
+                }, (err: any) => {
+                    subscriber.error(err);
                 });
         });
     };
