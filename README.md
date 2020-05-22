@@ -6,6 +6,10 @@ Right now we're mostly doing rx.
 
 ## [92green-rxjs](packages/92green-rxjs)
 
+```
+yarn add 92green-rxjs
+```
+
 Rxjs algorithms.
 
 - [multiCache](#multiCache)

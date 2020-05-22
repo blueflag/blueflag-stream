@@ -1,5 +1,9 @@
 # 92green-rxjs
 
+```
+yarn add 92green-rxjs
+```
+
 Rxjs algorithms.
 
 - [multiCache](#multiCache)
