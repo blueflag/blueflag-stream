@@ -9,11 +9,11 @@ Rxjs algorithms.
 - [multiCache](#multiCache)
 - [memoryCache](#memoryCache)
 - [zipDiff](#zipDiff)
-- [operators/bufferDistinct](#operators/bufferDistinct)
-- [operators/complete](#operators/complete)
-- [dynamodb/batchGetWithRetry](#dynamodb/batchGetWithRetry)
-- [dynamodb/batchWriteWithRetry](#dynamodb/batchWrite)
-- [dynamodb/queryAll](#dynamodb/queryAll)
+- [operators/bufferDistinct](#operatorsbufferDistinct)
+- [operators/complete](#operatorscomplete)
+- [dynamodb/batchGetWithRetry](#dynamodbbatchGetWithRetry)
+- [dynamodb/batchWriteWithRetry](#dynamodbbatchWrite)
+- [dynamodb/queryAll](#dynamodbqueryAll)
 
 ## multiCache
 
