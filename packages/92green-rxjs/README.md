@@ -1,4 +1,4 @@
-# blueflag-rxjs
+# 92green-rxjs
 
 Rxjs algorithms.
 
@@ -18,7 +18,7 @@ It also saves items in caches once found.
 it does not guarantee item order.
 
 ```js
-import {multiCache} from 'blueflag-rxjs';
+import {multiCache} from '92green-rxjs';
 
 let myMemoryCacheOperator = {
     name: 'memory-cache',
@@ -60,8 +60,8 @@ Usage with `multiCache`:
 ```js
 import {from} from 'rxjs'
 import {flatMap} from 'rxjs/operators'
-import {multiCache} from 'blueflag-rxjs';
-import {memoryCache} from 'blueflag-rxjs';
+import {multiCache} from '92green-rxjs';
+import {memoryCache} from '92green-rxjs';
 
 let dataSource = {
     name: 'data-source',
@@ -107,7 +107,7 @@ Items are emitted as early as they can be, so the internal buffer can try and be
 (e.g. if the buffer contains items from A, and input observable B completes, then it's known there will never be matches for any buffered A's, so they are all emitted)
 
 ```js
-import {zipDiff} from 'blueflag-rxjs';
+import {zipDiff} from '92green-rxjs';
 
 zipDiff(
     obsA: Observable,
@@ -149,7 +149,7 @@ Buffers items while the given predicate function returns the same thing, and emi
 If `flushObs` is passed, the buffer will be flushed any time `flushObs` emits.
 
 ```js
-import {bufferDistinct} from 'blueflag-rxjs/operators';
+import {bufferDistinct} from '92green-rxjs/operators';
 
 bufferDistinct(item => comparisonValue, flushObs: ?Observable)
 ```
@@ -188,7 +188,7 @@ obs.pipe(
 Emits a single item upon completion of the observable.
 
 ```js
-import {complete} from 'blueflag-rxjs/operators';
+import {complete} from '92green-rxjs/operators';
 
 complete()
 ```
@@ -208,7 +208,7 @@ Turns AWS `DocClient.batchGet()` into a pipeable observable which accepts an obs
 
 
 ```js
-import {batchGetWithRetry} from 'blueflag-rxjs/dynamodb';
+import {batchGetWithRetry} from '92green-rxjs/dynamodb';
 
 batchGetWithRetry({
     docClient: DocClient,
@@ -236,7 +236,7 @@ Turns AWS `DocClient.batchWrite()` into a pipeable observable which accepts an o
 
 
 ```js
-import {batchWriteWithRetry} from 'blueflag-rxjs/dynamodb';
+import {batchWriteWithRetry} from '92green-rxjs/dynamodb';
 
 batchWriteWithRetry({
     docClient: DocClient,
@@ -267,7 +267,7 @@ Turns AWS `DocClient.query()` into an observable which will by default keep requ
 
 
 ```js
-import {queryAll} from 'blueflag-rxjs/dynamodb';
+import {queryAll} from '92green-rxjs/dynamodb';
 
 queryAll(
     docClient: DocClient,

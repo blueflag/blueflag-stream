@@ -1,15 +1,15 @@
 {
-  "name": "blueflag-rxjs",
+  "name": "92green-rxjs",
   "version": "0.6.0",
   "description": "Rxjs algorithms",
   "license": "MIT",
   "author": "Blueflag",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/blueflag/blueflag-stream.git"
+    "url": "git+https://github.com/92green/92green-stream.git"
   },
   "bugs": {
-    "url": "https://github.com/blueflag/blueflag-stream/issues"
+    "url": "https://github.com/92green/92green-stream/issues"
   },
   "files": [
     "lib",

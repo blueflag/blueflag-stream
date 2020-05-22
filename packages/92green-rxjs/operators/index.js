@@ -1,3 +1,3 @@
 // @flow
-// required to make blueflag-rxjs/operator imports work
+// required to make 92green-rxjs/operator imports work
 module.exports = require('../lib/operators/index.js');
