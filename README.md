@@ -221,6 +221,11 @@ First parameter is a function that returns the string that is used for selecting
 
 Second parameter is an object that keys correspond to the strings that are returned from the selector and values are operators that operate on the different streams.   
 
+
+```js
+route(selector: (any) => string, routes: { [string]: (Observable) }) => (obs: Observable): Observable
+```
+
 ```js
 import {route} from '92green-rxjs/operators';  
 
