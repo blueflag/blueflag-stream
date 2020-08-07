@@ -17,6 +17,7 @@ Rxjs algorithms.
 - [zipDiff](#zipDiff)
 - [operators/bufferDistinct](#operatorsbufferDistinct)
 - [operators/complete](#operatorscomplete)
+- [operators/route](#operatorsroute)
 - [dynamodb/batchGetWithRetry](#dynamodbbatchGetWithRetry)
 - [dynamodb/batchWriteWithRetry](#dynamodbbatchWriteWithRetry)
 - [dynamodb/queryAll](#dynamodbqueryAll)
@@ -211,6 +212,37 @@ obs.pipe(
     })
 );
 ```
+
+### operators/route
+
+Routes based on a selector. 
+
+First parameter is a function that returns the string that is used for selecting from the routes.
+
+Second parameter is an object that keys correspond to the strings that are returned from the selector and values are operators that operate on the different streams.   
+
+```js
+import {route} from '92green-rxjs/operators';  
+
+from([
+    {selector: 'negOne', value: 1},
+    {selector: 'negOne', value: 2},
+    {selector: 'addOne', value: 1},
+    {selector: 'addOne', value: 2},
+    {selector: 'addOne', value: 3}
+]).pipe(
+    route(
+        (item) => item.selector,
+        {
+            'negOne': (obs) => obs.pipe(map(ii => ii.value - 1)),
+            'addOne': (obs) => obs.pipe(map(ii => ii.value + 1))
+        }
+    )
+)
+//Result 0, 1, 2, 3, 4
+
+```
+
 
 ### dynamodb/batchGetWithRetry
 
