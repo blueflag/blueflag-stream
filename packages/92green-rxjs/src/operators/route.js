@@ -1,3 +1,5 @@
+// @flow
+
 import {filter, share} from 'rxjs/operators';
 import {merge} from 'rxjs';
 
