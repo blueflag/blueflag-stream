@@ -1,8 +1,6 @@
 import {filter, share} from 'rxjs/operators';
 import {merge} from 'rxjs';
 
-
-
 export default (selector: (any) => string, routes: { [string]: (Observable) }) => (obs: Observable): Observable => {
     let  $source = obs.pipe(share());
     // split everything based on the routes.
