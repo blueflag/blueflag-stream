@@ -41,17 +41,32 @@ type Loader<A,I> = (args: A) => Promise<I>|Observable<I>;
 
 type GetArgsFromData = (data: any) => any;
 
-export default function<A,I>(loader: Loader<A,I>, getArgsFromData: GetArgsFromData, timeToBuffer: number, batchSize: number): Operator<A,I|undefined> {
+type Result = {
+    load: Operator<A,I|undefined>,
+    clear: Operator<A,A>
+};
 
-    const cache = memoryCache();
+type Config = {
+    loader: Loader<A,I>,
+    getArgsFromData: GetArgsFromData,
+    bufferTime: number,
+    batchSize: number,
+    maxItems?: number
+};
 
-    return (argsObs: Observable<A>): Observable<O> => {
+export default function<A,I>(config: Config): Result {
+
+    const cache = memoryCache(config.maxItems || 0);
+
+    const load = (argsObs: Observable<A>): Observable<O> => {
+
+        const argsToPayload = map(args => ({
+            args,
+            id: argsToKey(args)
+        }));
 
         const loadObs = argsObs.pipe(
-            map(args => ({
-                args,
-                id: argsToKey(args)
-            })),
+            argsToPayload,
             cache.load,
             share()
         );
@@ -62,18 +77,18 @@ export default function<A,I>(loader: Loader<A,I>, getArgsFromData: GetArgsFromDa
 
         const notFoundObs = loadObs.pipe(
             filter(payload => payload.item === undefined),
-            bufferTime(timeToBuffer),
+            bufferTime(config.bufferTime),
             mergeMap((payloads: Payload<I>[]) => from(payloads).pipe(
-                bufferCount(batchSize)
+                bufferCount(config.batchSize)
             )),
             concatMap((payloads: Payload<I>[]): Observable<Payload<I>> => from(payloads).pipe(
                 map(payload => payload.args),
                 toArray(),
-                mergeMap(loader),
+                mergeMap(config.loader),
                 mergeMap((results: I[]): Observable<Payload<I>> => {
 
                     const itemsMap = new Map(results.map(result => [
-                        argsToKey(getArgsFromData(result)),
+                        argsToKey(config.getArgsFromData(result)),
                         result
                     ]));
 
@@ -90,4 +105,16 @@ export default function<A,I>(loader: Loader<A,I>, getArgsFromData: GetArgsFromDa
 
         return merge(foundObs, notFoundObs).pipe(map(payload => payload.item));
     };
+
+    const clear = (argsObs: Observable<A>): Observable<A> => {
+        return argsObs.pipe(
+            argsToPayload,
+            cache.clear
+        );
+    };
+
+    return {
+        load,
+        clear
+    }
 }

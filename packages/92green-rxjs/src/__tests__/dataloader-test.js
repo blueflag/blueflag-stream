@@ -3,11 +3,13 @@ import {TestScheduler} from 'rxjs/testing';
 import dataloader, {argsToKey} from '../dataloader';
 
 import {of, from} from 'rxjs';
-import {delay, toArray, map, filter} from 'rxjs/operators';
+import {delay, toArray, map, filter, mergeMap} from 'rxjs/operators';
+
+jest.useFakeTimers()
 
 describe('dataloader', () => {
 
-    it('should get items', () => {
+    it('should load items', () => {
 
         const testScheduler = new TestScheduler((actual, expected) => {
             expect(actual).toEqual(expected);
@@ -41,18 +43,92 @@ describe('dataloader', () => {
                 f: undefined
             };
 
-            const requester = (argsArray) => {
-                const resultArray = argsArray.map(args => values[args]).filter(Boolean);
-                return of(resultArray).pipe(delay(3));
-            };
-
             const inputObs = cold('-a--bc--a-------------d-a-e-b--------f--------|');
             const subs =          '^---------------------------------------------!';
             const expected =      '-------------(aabc)-----a---b----(de)------f--|';
 
+            const thingLoader = dataloader({
+                loader: (argsArray) => {
+                    const resultArray = argsArray.map(args => values[args]).filter(Boolean);
+                    return of(resultArray).pipe(delay(3));
+                },
+                getArgsFromData: result => result.id,
+                bufferTime: 10,
+                batchSize: 3,
+                maxItems: 1000
+            });
+
             expectObservable(
                 inputObs.pipe(
-                    dataloader(requester, result => result.id, 10, 3)
+                    thingLoader.load
+                )
+            ).toBe(expected, values);
+
+            expectSubscriptions(inputObs.subscriptions).toBe(subs);
+        });
+    });
+
+    it.only('should load items and share cache even when used in different pipes', () => {
+
+        const testScheduler = new TestScheduler((actual, expected) => {
+            expect(actual).toEqual(expected);
+        });
+
+        testScheduler.run(helpers => {
+            const {cold, expectObservable, expectSubscriptions} = helpers;
+
+            const values = {
+                a: {
+                    id: 'a',
+                    name: 'A'
+                },
+                b: {
+                    id: 'b',
+                    name: 'B'
+                },
+                c: {
+                    id: 'c',
+                    name: 'C'
+                },
+                d: {
+                    id: 'd',
+                    name: 'D'
+                },
+                e: {
+                    id: 'e',
+                    name: 'E'
+                },
+                // not an item!
+                f: undefined
+            };
+
+            // const inputObs = cold('-a--bc--a-------------d-a-e-b--------f--------|');
+            // const subs =          '^---------------------------------------------!';
+            // const expected =      '-------------(aabc)-----a---b----(de)------f--|';
+
+            const inputObs = cold('-a---|');
+            const subs =          '^----!';
+            const expected =      '-----|';
+
+            console.log('/');
+
+            const thingLoader = dataloader({
+                loader: (argsArray) => {
+                    console.log('argsArray', argsArray);
+                    const resultArray = argsArray.map(args => values[args]).filter(Boolean);
+                    return of(resultArray).pipe(delay(3));
+                },
+                getArgsFromData: result => result.id,
+                bufferTime: 10,
+                batchSize: 3,
+                maxItems: 1000
+            });
+
+            expectObservable(
+                inputObs.pipe(
+                    mergeMap((args) => of(args).pipe(
+                        thingLoader.load
+                    ))
                 )
             ).toBe(expected, values);
 

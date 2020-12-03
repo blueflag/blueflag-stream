@@ -33,11 +33,15 @@ import {dataloader} from '92green-rxjs';
 // requester is placed inside a mergeMap,
 // so can return either a promise or a single observable item containing an array of results
 
-const requester = async (argsArray) => await batchGetThings(argsArray);
-
-const getArgsFromData = result => ({
-    tenantId: result.tenantId,
-    id: result.id
+const thingLoader = dataloader({
+    loader: async (argsArray) => await batchGetThings(argsArray),
+    getArgsFromData: result => ({
+        tenantId: result.tenantId,
+        id: result.id
+    }),
+    bufferTime: 10,
+    batchSize: 3,
+    maxItems: 1000
 });
 
 from([
@@ -46,8 +50,10 @@ from([
     {tenantId: 'bar', id: 'a'}
 ])
     .pipe(
-        dataloader(requester, getArgsFromData, 10, 3)
+        thingLoader.load
     );
+
+// thingLoader.clear can also be used in the same way as thingLoader.load to clear specific items from cache
 
 ```
 

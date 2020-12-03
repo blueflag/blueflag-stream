@@ -5,6 +5,7 @@ import {of} from 'rxjs';
 import {AsyncSubject} from 'rxjs';
 import {flatMap} from 'rxjs/operators';
 import {map} from 'rxjs/operators';
+import {LRUMap} from 'lru_map';
 
 type Id = any;
 type Item = any;
@@ -16,7 +17,8 @@ type Payload = {
 type Operator<I,O> = (obs: Observable<I>) => Observable<O>;
 
 type Config = {
-    name?: string
+    name?: string,
+    maxItems?: number
 };
 
 type MemoryCache = {
@@ -29,7 +31,9 @@ type MemoryCache = {
 export default (config: Config = {}): MemoryCache => {
 
     let name: string = config.name || 'memory-cache';
-    let cache: Map<string, AsyncSubject> = new Map();
+    let cache: Map<string, AsyncSubject> = config.maxItems
+        ? new LRUMap(config.maxItems)
+        : new Map();
 
     let load = flatMap((payload: Payload) => {
         let cached = cache.get(payload.id);
