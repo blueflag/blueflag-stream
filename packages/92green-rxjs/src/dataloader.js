@@ -46,7 +46,7 @@ type Config = {
     bufferTime?: number
 };
 
-export default function<A,I>(loader: Loader<A,I>, getArgsFromData: GetArgsFromData, timeToBuffer: number, batchSize: number): Operator<A,Payload<I>> {
+export default function<A,I>(loader: Loader<A,I>, getArgsFromData: GetArgsFromData, timeToBuffer: number, batchSize: number): Operator<A,I> {
 
     const cache = memoryCache();
 
@@ -93,6 +93,6 @@ export default function<A,I>(loader: Loader<A,I>, getArgsFromData: GetArgsFromDa
             cache.save
         );
 
-        return merge(foundObs, notFoundObs);
+        return merge(foundObs, notFoundObs).pipe(map(payload => payload.item));
     };
 }

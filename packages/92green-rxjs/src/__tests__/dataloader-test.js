@@ -18,55 +18,31 @@ describe('dataloader', () => {
 
             const values = {
                 a: {
-                    args: 'a',
-                    id: '"a"',
-                    item: {
-                        id: 'a',
-                        name: 'A'
-                    }
+                    id: 'a',
+                    name: 'A'
                 },
                 b: {
-                    args: 'b',
-                    id: '"b"',
-                    item: {
-                        id: 'b',
-                        name: 'B'
-                    }
+                    id: 'b',
+                    name: 'B'
                 },
                 c: {
-                    args: 'c',
-                    id: '"c"',
-                    item: {
-                        id: 'c',
-                        name: 'C'
-                    }
+                    id: 'c',
+                    name: 'C'
                 },
                 d: {
-                    args: 'd',
-                    id: '"d"',
-                    item: {
-                        id: 'd',
-                        name: 'D'
-                    }
+                    id: 'd',
+                    name: 'D'
                 },
                 e: {
-                    args: 'e',
-                    id: '"e"',
-                    item: {
-                        id: 'e',
-                        name: 'E'
-                    }
+                    id: 'e',
+                    name: 'E'
                 },
                 // not an item!
-                f: {
-                    args: 'f',
-                    id: '"f"',
-                    item: undefined
-                }
+                f: undefined
             };
 
             const requester = (argsArray) => {
-                const resultArray = argsArray.map(args => values[args].item).filter(Boolean);
+                const resultArray = argsArray.map(args => values[args]).filter(Boolean);
                 return of(resultArray).pipe(delay(3));
             };
 

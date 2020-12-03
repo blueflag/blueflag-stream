@@ -49,13 +49,6 @@ from([
         dataloader(requester, getArgsFromData, 10, 3)
     );
 
-// output observable will be shaped like
-// {
-//    args: {tenantId: 'foo', id: 'a'},
-//    item: <data returned from requester>,
-//    id: <string representation of args
-// }
-
 ```
 
 ## multiCache
