@@ -8,8 +8,12 @@ import multiCacheOriginal from '../multiCache';
 import {zipDiff} from '../index';
 import zipDiffOriginal from '../zipDiff';
 
+import {dataloader} from '../index';
+import dataloaderOriginal from '../dataloader';
+
 test('index should export everything', () => {
     expect(memoryCache).toBe(memoryCacheOriginal);
     expect(multiCache).toBe(multiCacheOriginal);
     expect(zipDiff).toBe(zipDiffOriginal);
+    expect(dataloader).toBe(dataloaderOriginal);
 });

@@ -6,6 +6,7 @@ yarn add 92green-rxjs
 
 Rxjs algorithms.
 
+- [dataloader](#dataloader)
 - [multiCache](#multiCache)
 - [memoryCache](#memoryCache)
 - [zipDiff](#zipDiff)
@@ -14,6 +15,48 @@ Rxjs algorithms.
 - [dynamodb/batchGetWithRetry](#dynamodbbatchGetWithRetry)
 - [dynamodb/batchWriteWithRetry](#dynamodbbatchWrite)
 - [dynamodb/queryAll](#dynamodbqueryAll)
+
+## dataloader
+
+An RX operator that works like graphql dataloader, performing buffering and batching of requests from an incoming stream of different arguments.
+
+It has 4 parameters:
+
+- `requester` is a function that is called when each buffer is ready to request. It's passed an arrray of args, and expects a promise containing an array of results to be returned. Unlike dataloader, these can be returned in any order, or have missing items. Requesters are called in series, not parallel.
+- `getArgsFromData` is a function that is given a single piece of data returned from `requester`, and returns its corresponding `args`. This is to identify which requested items were returned from `requester`.
+- `timeToBuffer` is the number of milliseconds to buffer
+- `batchSize` is the max size that the bufer should reach before sending a request
+
+```js
+import {dataloader} from '92green-rxjs';
+
+// requester is placed inside a mergeMap,
+// so can return either a promise or a single observable item containing an array of results
+
+const requester = async (argsArray) => await batchGetThings(argsArray);
+
+const getArgsFromData = result => ({
+    tenantId: result.tenantId,
+    id: result.id
+});
+
+from([
+    {tenantId: 'foo', id: 'a'},
+    {tenantId: 'foo', id: 'b'},
+    {tenantId: 'bar', id: 'a'}
+])
+    .pipe(
+        dataloader(requester, getArgsFromData, 10, 3)
+    );
+
+// output observable will be shaped like
+// {
+//    args: {tenantId: 'foo', id: 'a'},
+//    item: <data returned from requester>,
+//    id: <string representation of args
+// }
+
+```
 
 ## multiCache
 
