@@ -1,8 +1,7 @@
 //@flow
 import type {Observable} from 'rxjs';
 import memoryCache from './memoryCache';
-import zipDiff from './zipDiff';
-import {merge, of, from} from 'rxjs';
+import {merge, from} from 'rxjs';
 import {map, mergeMap, share, bufferCount, bufferTime, filter, concatMap, toArray} from 'rxjs/operators';
 
 // argsToKey taken from mobx-fog-of-war
@@ -42,11 +41,7 @@ type Loader<A,I> = (args: A) => Promise<I>|Observable<I>;
 
 type GetArgsFromData = (data: any) => any;
 
-type Config = {
-    bufferTime?: number
-};
-
-export default function<A,I>(loader: Loader<A,I>, getArgsFromData: GetArgsFromData, timeToBuffer: number, batchSize: number): Operator<A,I> {
+export default function<A,I>(loader: Loader<A,I>, getArgsFromData: GetArgsFromData, timeToBuffer: number, batchSize: number): Operator<A,I|undefined> {
 
     const cache = memoryCache();
 
@@ -77,7 +72,7 @@ export default function<A,I>(loader: Loader<A,I>, getArgsFromData: GetArgsFromDa
                 mergeMap(loader),
                 mergeMap((results: I[]): Observable<Payload<I>> => {
 
-                    const itemsMap = new Map<string,I>(results.map(result => [
+                    const itemsMap = new Map(results.map(result => [
                         argsToKey(getArgsFromData(result)),
                         result
                     ]));
